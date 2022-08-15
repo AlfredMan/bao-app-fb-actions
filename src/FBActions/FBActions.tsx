@@ -289,7 +289,7 @@ function handleResetPassword (auth, actionCode, continueUrl, lang) {
           {/* <div className="px-2">mode: {mode}</div>
           <div>oobCode: {oobCode}</div>
           <div>apiKey: {apiKey}</div> */}
-          <article className="max-w-[640] mx-16 px-8 py-8 rounded-lg bg-white shadow">
+          <article className="max-w-[480] mx-16 px-8 py-8 rounded-lg bg-white shadow">
             {actionSucceedMessage && (
               <div className="">
                 <div className="bold text-2xl mb-2">
