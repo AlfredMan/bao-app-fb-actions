@@ -1,12 +1,17 @@
 // http://127.0.0.1:3000/?mode=verifyEmail&oobCode=mDILMMzyesaTNCQriWztuAYpL6Yzl8k01U1uKh0FNMgAAAGCiJ8ALg&apiKey=AIzaSyDqoX52nqdqjFFZW6dJgo48dR2MW8y7Ep8&lang=en
 // import { Auth } from "firebase/auth";
-import { auth, firebaseApp } from "./firebase/firebaseClient";
+import { auth, firebaseApp } from "../firebase/firebaseClient";
 import React, { useEffect, useState } from "react";
-import { applyActionCode, Auth } from "firebase/auth";
+import { applyActionCode, Auth, verifyPasswordResetCode } from "firebase/auth";
+import { FBActionMode } from "../models/FBActions";
+
 export const FBActions = () => {
-  const [message, setMessage] = useState("");
-  const [hasError, setHasError] = useState(false);
-  const [mode, setMode] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [actionSucceedMessage, setActionSucceedMessage] = useState("");
+  // const [message, setMessage] = useState("");
+  // const [actionSucceed, setActionSucceed] = useState(false);
+  // const [hasError, setHasError] = useState(false);
+  const [mode, setMode] = useState<FBActionMode | undefined>();
   const [oobCode, setOobCode] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [continueUrl, setContinueUrl] = useState("");
@@ -14,7 +19,7 @@ export const FBActions = () => {
   const [role, setRole] = useState("");
 
   useEffect(() => {
-    const mode = getParameterByName("mode");
+    const mode = getParameterByName("mode") as FBActionMode;
     setMode(mode);
     const actionCode = getParameterByName("oobCode");
     setOobCode(actionCode);
@@ -230,12 +235,15 @@ function handleResetPassword (auth, actionCode, continueUrl, lang) {
       // Email address has been verified.
       console.log("auth.applyActionCode:", resp);
       // state.hasError = false
-      setHasError(false);
+      // setHasError(false);
       // state.mode = 'verifyEmail'
       // setMode("verifyEmail")
       // message = 'You have successfully verified.'
       // state.message = 'Thank you for verifying your email address. Redirecting...'
-      setMessage("Thank you for verifying your email address. Redirecting...");
+      // setMessage("Thank you for verifying your email address. Redirecting...");
+      setActionSucceedMessage(
+        "Thank you for verifying your email address. You can now log in to our BAO Loyalty App"
+      );
       // setTimeout(function () {
       // verificationSuccessCallback()
       // }, 4000)
@@ -247,12 +255,12 @@ function handleResetPassword (auth, actionCode, continueUrl, lang) {
       // click redirects the user back to the app via continueUrl with
       // additional state determined from that URL's parameters.
     } catch (error) {
-      setHasError(true);
+      // setHasError(true);
       // state.mode = 'verifyEmail'
       // state.mode = 'error'
       // message = 'Something went wrong please try again later or contact our team.'
       // message = `${error.message} Please try again later or contact our team.`
-      setMessage(
+      setErrorMessage(
         `${
           // (error as unknown as Error)?.message + "<br><br>" ?? ""
           (error as unknown as Error)?.message + "\n\n" ?? ""
@@ -267,24 +275,47 @@ function handleResetPassword (auth, actionCode, continueUrl, lang) {
   };
 
   const handleError = () => {
-    setMode("error");
-    setMessage(
+    //   setMode("error");
+    // setHasError(true);
+    setErrorMessage(
       `Error. Your URL is invalid. Please try again later or contact our team.`
     );
   };
 
   return (
-    <div className="App">
-      <section className="w-full h-full flex justify-center">
+    <div className="App absolute inset-0 ">
+      <section className="w-full h-full flex justify-center bg-[#f5f5f1]">
         <div className="max-w-screen-lg mt-16">
           {/* <div className="px-2">mode: {mode}</div>
           <div>oobCode: {oobCode}</div>
           <div>apiKey: {apiKey}</div> */}
-          <div> {message}</div>
-          {hasError && <div>Please try again later or contact our team.</div>}
-          {/* <div>continueUrl: {continueUrl}</div>
+          <article className="max-w-[640] mx-16 px-8 py-8 rounded-lg bg-white shadow">
+            {actionSucceedMessage && (
+              <div className="">
+                <div className="bold text-2xl mb-2">
+                  Your account is now verified
+                </div>
+                <div>
+                  You can now log in through the app with your username and password
+                </div>
+              </div>
+            )}
+            {errorMessage && (
+              <div className="">
+                <div className="bold text-2xl mb-2">
+                  Link expired or invalid
+                </div>
+                <div>
+                  Please restart the app and goto login page to get another
+                  verification email or contact our team through
+                  support@baolondon.com.
+                </div>
+              </div>
+            )}
+            {/* <div>continueUrl: {continueUrl}</div>
           <div>lang: {lang}</div>
           <div>role: {role}</div> */}
+          </article>
         </div>
       </section>
     </div>

@@ -3,7 +3,7 @@ import logo from "./logo.svg";
 import "./App.css";
 
 import { auth, firebaseApp } from "./firebase/firebaseClient";
-import FBActions from "./FBActions";
+import FBActions from "./FBActions/FBActions";
 
 function App() {
   return (
