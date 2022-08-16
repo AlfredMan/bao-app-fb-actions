@@ -4,10 +4,17 @@ import { auth, firebaseApp } from "../firebase/firebaseClient";
 import React, { useEffect, useState } from "react";
 import { applyActionCode, Auth, verifyPasswordResetCode } from "firebase/auth";
 import { FBActionMode } from "../models/FBActions";
+import { getQueryParameterByName } from "../utils/httpHelper";
+import VerifyEmailResultCard from "./VerifyEmailResultCard";
+import VerifyPasswordResetCodeResultCard from "./VerifyPasswordResetCodeResultCard";
 
 export const FBActions = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [actionSucceedMessage, setActionSucceedMessage] = useState("");
+  const [
+    verifyPasswordResetCodeSucceedEmail,
+    setVerifyPasswordResetCodeSucceedEmail,
+  ] = useState("");
   // const [message, setMessage] = useState("");
   // const [actionSucceed, setActionSucceed] = useState(false);
   // const [hasError, setHasError] = useState(false);
@@ -19,27 +26,25 @@ export const FBActions = () => {
   const [role, setRole] = useState("");
 
   useEffect(() => {
-    const mode = getParameterByName("mode") as FBActionMode;
+    const mode = getQueryParameterByName("mode") as FBActionMode;
     setMode(mode);
-    const actionCode = getParameterByName("oobCode");
+    const actionCode = getQueryParameterByName("oobCode");
     setOobCode(actionCode);
-    setApiKey(getParameterByName("apiKey"));
-    setContinueUrl(getParameterByName("continueUrl"));
-    setLang(getParameterByName("lang") || "en");
-    setRole(getParameterByName("role"));
+    setApiKey(getQueryParameterByName("apiKey"));
+    setContinueUrl(getQueryParameterByName("continueUrl"));
+    setLang(getQueryParameterByName("lang") || "en");
+    setRole(getQueryParameterByName("role"));
 
     switch (mode) {
       case "resetPassword":
         // Display reset password handler and UI.
         // handleResetPassword(auth, actionCode, continueUrl, lang);
-        // handleResetPassword(auth, actionCode, continueUrl, lang)
+        handleResetPassword({ auth, actionCode, continueUrl, lang });
         break;
       case "recoverEmail":
         // Display email recovery handler and UI.
         // handleRecoverEmail(auth, actionCode, lang);
-
         // not handling
-
         break;
       case "verifyEmail":
         // Display email verification handler and UI.
@@ -51,17 +56,6 @@ export const FBActions = () => {
         break;
     }
   }, []);
-  const getParameterByName = (name: string) => {
-    name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
-    var regexS = "[\\?&]" + name + "=([^&#]*)";
-    var regex = new RegExp(regexS);
-    var results = regex.exec(window.location.href);
-    if (results == null) {
-      return "";
-    } else {
-      return decodeURIComponent(results[1].replace(/\+/g, " "));
-    }
-  };
 
   /*
 
@@ -175,39 +169,50 @@ updateUI()
 // }, 300)
 
 
-function handleResetPassword (auth, actionCode, continueUrl, lang) {
-  console.log('handlePasswordReset')
-  // Localize the UI to the selected language as determined by the lang
-  // parameter.
-  var accountEmail
 
-  // Verify the password reset code is valid.
-  auth.verifyPasswordResetCode(actionCode).then(function (email) {
-    var accountEmail = email
-    // TODO: Show the reset screen with the user's email and ask the user for
-    // the new password.
-    // confirmPasswordReset(actionCode, newPassword)
-
-    state.email = accountEmail
-    state.actionCode = actionCode
-    state.mode = 'resetPassword'
-    state.hasError = false
-    updateUI()
-
-  }).catch(function (error) {
-    state.mode = 'error'
-    // message = 'Something went wrong please try again later or contact our team.'
-    // message = error.message
-    state.message = `${error.message}<br><br>Please try again later or contact our team.`
-    state.hasError = true
-    console.log(error)
-    updateUI()
-    // Invalid or expired action code. Ask user to try to reset the password
-    // again.
-  })
-}
 */
+  function handleResetPassword({
+    auth,
+    actionCode,
+    continueUrl,
+    lang,
+  }: {
+    auth: Auth;
+    actionCode: string;
+    continueUrl: string;
+    lang: string;
+  }) {
+    console.log("handlePasswordReset");
+    // Localize the UI to the selected language as determined by the lang
+    // parameter.
+    // Verify the password reset code is valid.
+    verifyPasswordResetCode(auth, actionCode)
+      .then(function (email) {
+        setVerifyPasswordResetCodeSucceedEmail(email);
+        // var accountEmail = email;
+        // TODO: Show the reset screen with the user's email and ask the user for
+        // the new password.
+        // confirmPasswordReset(actionCode, newPassword)
 
+        // state.email = accountEmail;
+        // state.actionCode = actionCode;
+        // state.mode = "resetPassword";
+        // state.hasError = false;
+        // updateUI();
+      })
+      .catch(function (error) {
+        // state.mode = "error";
+        // message = 'Something went wrong please try again later or contact our team.'
+        // message = error.message
+        // state.message = `${error.message}<br><br>Please try again later or contact our team.`;
+        setErrorMessage(error?.message);
+        // state.hasError = true;
+        // console.log(error);
+        // updateUI();
+        // Invalid or expired action code. Ask user to try to reset the password
+        // again.
+      });
+  }
   const handleVerifyEmail = async ({
     auth,
     actionCode,
@@ -228,8 +233,8 @@ function handleResetPassword (auth, actionCode, continueUrl, lang) {
 
     try {
       const resp = await applyActionCode(auth, actionCode);
-      const message =
-        "Thank you for verifying your email address. Redirecting...";
+      // const message =
+      //   "Thank you for verifying your email address. Redirecting...";
 
       // auth.applyActionCode(actionCode).then(function (resp) {
       // Email address has been verified.
@@ -286,35 +291,23 @@ function handleResetPassword (auth, actionCode, continueUrl, lang) {
     <div className="App absolute inset-0 ">
       <section className="w-full h-full flex justify-center bg-[#f5f5f1]">
         <div className="max-w-screen-lg mt-16">
-          {/* <div className="px-2">mode: {mode}</div>
+          {/* 
+          <div className="px-2">mode: {mode}</div>
           <div>oobCode: {oobCode}</div>
-          <div>apiKey: {apiKey}</div> */}
-          <article className="max-w-[480px] mx-16 px-8 py-8 rounded-lg bg-white shadow">
-            {actionSucceedMessage && (
-              <div className="">
-                <div className="bold text-2xl mb-2">
-                  Your account is now verified
-                </div>
-                <div>
-                  You can now log in through the app with your username and password
-                </div>
-              </div>
-            )}
-            {errorMessage && (
-              <div className="">
-                <div className="bold text-2xl mb-2">
-                  Link expired or invalid
-                </div>
-                <div>
-                  Please restart the app and goto login page to get another
-                  verification email or contact our team through
-                  support@baolondon.com.
-                </div>
-              </div>
-            )}
-            {/* <div>continueUrl: {continueUrl}</div>
+          <div>apiKey: {apiKey}</div>
           <div>lang: {lang}</div>
-          <div>role: {role}</div> */}
+          <div>role: {role}</div> 
+          */}
+          <article className="max-w-[480px] mx-16 px-8 py-8 rounded-lg bg-white shadow">
+            {mode === "resetPassword" &&
+              VerifyPasswordResetCodeResultCard({
+                actionSucceedMessage,
+                errorMessage,
+              })}
+          </article>
+          <article className="max-w-[480px] mx-16 px-8 py-8 rounded-lg bg-white shadow">
+            {mode === "verifyEmail" &&
+              VerifyEmailResultCard({ actionSucceedMessage, errorMessage })}
           </article>
         </div>
       </section>
