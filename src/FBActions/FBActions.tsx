@@ -2,11 +2,17 @@
 // import { Auth } from "firebase/auth";
 import { auth, firebaseApp } from "../firebase/firebaseClient";
 import React, { useEffect, useState } from "react";
-import { applyActionCode, Auth, verifyPasswordResetCode } from "firebase/auth";
+import {
+  applyActionCode,
+  Auth,
+  confirmPasswordReset,
+  verifyPasswordResetCode,
+} from "firebase/auth";
 import { FBActionMode } from "../models/FBActions";
 import { getQueryParameterByName } from "../utils/httpHelper";
 import VerifyEmailResultCard from "./VerifyEmailResultCard";
 import VerifyPasswordResetCodeResultCard from "./VerifyPasswordResetCodeResultCard";
+import PasswordResetCodeCard from "./PasswordResetCodeCard";
 
 export const FBActions = () => {
   const [errorMessage, setErrorMessage] = useState("");
@@ -24,6 +30,8 @@ export const FBActions = () => {
   const [continueUrl, setContinueUrl] = useState("");
   const [lang, setLang] = useState("");
   const [role, setRole] = useState("");
+
+  const [newPassword, setNewPassword] = useState("");
 
   useEffect(() => {
     const mode = getQueryParameterByName("mode") as FBActionMode;
@@ -205,6 +213,7 @@ updateUI()
         // message = 'Something went wrong please try again later or contact our team.'
         // message = error.message
         // state.message = `${error.message}<br><br>Please try again later or contact our team.`;
+        console.error("pw reset error!")
         setErrorMessage(error?.message);
         // state.hasError = true;
         // console.log(error);
@@ -213,6 +222,36 @@ updateUI()
         // again.
       });
   }
+  const executeConfirmPasswordReset = (newPassword:string) => {
+    //   let self = this
+    // Save the new password.
+    //   let auth = app.auth()
+
+    confirmPasswordReset(auth, oobCode, newPassword)
+      .then(function (resp) {
+        // Password reset has been confirmed and new password updated.
+
+        // state.mode = "loading";
+        // state.hasError = false;
+        // state.message = "Your password has been reset.";
+        // updateUI();
+        setActionSucceedMessage("Your password has been reset.")
+
+        // setTimeout(function () {
+        //   passwordResetSuccessCallback();
+        // }, 300);
+      })
+      .catch(function (error) {
+        setErrorMessage("Something went wrong please try again later or contact our team")
+        // state.mode = "loading";
+        // state.hasError = true;
+        // // message = 'Something went wrong please try again later or contact our team.'
+        // state.message = `${error.message}<br><br>Please try again later or contact our team.`;
+        // updateUI();
+        // // Error occurred during confirmation. The code might have expired or the
+        // // password is too weak.
+      });
+  };
   const handleVerifyEmail = async ({
     auth,
     actionCode,
@@ -289,7 +328,7 @@ updateUI()
 
   return (
     <div className="App absolute inset-0 ">
-      <section className="w-full h-full flex justify-center bg-[#f5f5f1]">
+      <section className="w-full h-full flex justify-center bg-[#f5f5f1] ">
         <div className="max-w-screen-lg mt-16">
           {/* 
           <div className="px-2">mode: {mode}</div>
@@ -298,17 +337,35 @@ updateUI()
           <div>lang: {lang}</div>
           <div>role: {role}</div> 
           */}
-          <article className="max-w-[480px] mx-16 px-8 py-8 rounded-lg bg-white shadow">
-            {mode === "resetPassword" &&
-              VerifyPasswordResetCodeResultCard({
-                actionSucceedMessage,
-                errorMessage,
-              })}
-          </article>
-          <article className="max-w-[480px] mx-16 px-8 py-8 rounded-lg bg-white shadow">
-            {mode === "verifyEmail" &&
-              VerifyEmailResultCard({ actionSucceedMessage, errorMessage })}
-          </article>
+          {mode === "resetPassword" && !(actionSucceedMessage || errorMessage) && (
+            <article className="max-w-[480px] mx-16 px-8 py-8 rounded-lg bg-white shadow">
+              <PasswordResetCodeCard
+                oobCode={oobCode}
+                apiKey={apiKey}
+                verifyPasswordResetCodeSucceedEmail={
+                  verifyPasswordResetCodeSucceedEmail
+                }
+                // setNewPassword={setNewPassword}
+                executeConfirmPasswordReset={executeConfirmPasswordReset}
+              />
+            </article>
+          )}
+          {mode === "resetPassword" && (actionSucceedMessage || errorMessage )&& (
+            <article className="max-w-[480px] mx-16 px-8 py-8 rounded-lg bg-white shadow">
+              <VerifyPasswordResetCodeResultCard
+                actionSucceedMessage={actionSucceedMessage}
+                errorMessage={errorMessage}
+              />
+            </article>
+          )}
+          {mode === "verifyEmail" && (
+            <article className="max-w-[480px] mx-16 px-8 py-8 rounded-lg bg-white shadow">
+              <VerifyEmailResultCard
+                actionSucceedMessage={actionSucceedMessage}
+                errorMessage={errorMessage}
+              />
+            </article>
+          )}
         </div>
       </section>
     </div>

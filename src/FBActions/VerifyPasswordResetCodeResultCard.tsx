@@ -12,6 +12,7 @@ export const VerifyPasswordResetCodeResultCard = ({
   actionSucceedMessage?: string;
   errorMessage?: string;
 }) => {
+  const isLinkExpired = errorMessage?.includes("auth/invalid-action-code");
   return (
     <div className="App absolute inset-0 ">
       <section className="w-full h-full flex justify-center bg-[#f5f5f1]">
@@ -31,11 +32,16 @@ export const VerifyPasswordResetCodeResultCard = ({
             {errorMessage && (
               <div className="">
                 <div className="bold text-2xl mb-2">Password reset failed</div>
-                <div>{errorMessage}</div>
-                <div>
-                  Please try again later or contact our team through
-                  support@baolondon.com.
-                </div>
+                {isLinkExpired && <div>Password reset link expired. Reset password again from the app</div>}
+                {!isLinkExpired && (
+                  <>
+                    <div>{errorMessage}</div>
+                    <div>
+                      Please try again later or contact our team through
+                      support@baolondon.com.
+                    </div>
+                  </>
+                )}
               </div>
             )}
             {/* <div>continueUrl: {continueUrl}</div>
